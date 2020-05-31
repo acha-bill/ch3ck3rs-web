@@ -137,7 +137,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const SignUp = props => {
-  const { history } = props;
+  const { history, setUser } = props;
 
   const classes = useStyles();
 
@@ -366,7 +366,8 @@ const SignUp = props => {
 };
 
 SignUp.propTypes = {
-  history: PropTypes.object
+  history: PropTypes.object,
+  setUser: PropTypes.func
 };
 
 const mapStateToProps = () => {

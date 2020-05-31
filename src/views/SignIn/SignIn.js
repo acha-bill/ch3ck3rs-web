@@ -12,7 +12,7 @@ import {
 } from '@material-ui/core';
 import { connect } from 'react-redux';
 import {bindActionCreators} from 'redux';
-import { setJwt } from '../../redux/actions/authActions';
+import { setJwt, setLoggedIn } from '../../redux/actions/authActions';
 import  authApi from '../../apis/authApi';
 import Swal from 'sweetalert2';
 import initializeApis from '../../apis/initializeApis';
@@ -129,7 +129,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const SignIn = props => {
-  const { history, setJwt } = props;
+  const { history, setJwt, setLoggedIn } = props;
 
   const classes = useStyles();
 
@@ -176,6 +176,7 @@ const SignIn = props => {
       const {username, password} = formState.values;
       const jwt = await authApi.login(username, password);
       setJwt(jwt);
+      setLoggedIn(true);
       initializeApis(jwt);
       history.push('/dashboard');
     }catch(e){
@@ -313,7 +314,8 @@ const SignIn = props => {
 
 SignIn.propTypes = {
   history: PropTypes.object,
-  setJwt: PropTypes.func
+  setJwt: PropTypes.func,
+  setLoggedIn: PropTypes.func,
 };
 
 
@@ -322,7 +324,8 @@ const mapStateToProps = () => {
 }
 
 const mapDispatchToProps = dispatch => bindActionCreators({
-  setJwt  
+  setJwt,
+  setLoggedIn
 },
 dispatch
 );
