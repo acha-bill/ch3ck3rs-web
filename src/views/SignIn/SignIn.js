@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Link as RouterLink, withRouter } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import validate from 'validate.js';
 import { makeStyles } from '@material-ui/styles';
 import {
   Grid,
   Button,
-  IconButton,
   TextField,
   Link,
   Typography
 } from '@material-ui/core';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import { connect } from 'react-redux';
+import {bindActionCreators} from 'redux';
+import { setJwt } from '../../redux/actions/authActions';
+import  authApi from '../../apis/authApi';
+import Swal from 'sweetalert2';
+import initializeApis from '../../apis/initializeApis';
 
-import { Facebook as FacebookIcon, Google as GoogleIcon } from 'icons';
 
 const schema = {
-  email: {
+  username: {
     presence: { allowEmpty: false, message: 'is required' },
-    email: true,
     length: {
       maximum: 64
     }
@@ -26,7 +28,8 @@ const schema = {
   password: {
     presence: { allowEmpty: false, message: 'is required' },
     length: {
-      maximum: 128
+      maximum: 128,
+      minimum: 8
     }
   }
 };
@@ -45,12 +48,12 @@ const useStyles = makeStyles(theme => ({
     }
   },
   quote: {
-    backgroundColor: theme.palette.neutral,
+    backgroundColor: theme.palette.black,
     height: '100%',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundImage: 'url(/images/auth.jpg)',
+    // backgroundImage: 'url(/images/auth.jpg)',
     backgroundSize: 'cover',
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center'
@@ -126,7 +129,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const SignIn = props => {
-  const { history } = props;
+  const { history, setJwt } = props;
 
   const classes = useStyles();
 
@@ -147,9 +150,6 @@ const SignIn = props => {
     }));
   }, [formState.values]);
 
-  const handleBack = () => {
-    history.goBack();
-  };
 
   const handleChange = event => {
     event.persist();
@@ -170,9 +170,21 @@ const SignIn = props => {
     }));
   };
 
-  const handleSignIn = event => {
-    event.preventDefault();
-    history.push('/');
+  const handleSignIn = async event => {
+    try {
+      event.preventDefault();
+      const {username, password} = formState.values;
+      const jwt = await authApi.login(username, password);
+      setJwt(jwt);
+      initializeApis(jwt);
+      history.push('/dashboard');
+    }catch(e){
+      console.log(e);
+      Swal.fire({
+        icon: 'error',
+        text: e.message
+      })
+    }
   };
 
   const hasError = field =>
@@ -195,21 +207,20 @@ const SignIn = props => {
                 className={classes.quoteText}
                 variant="h1"
               >
-                Hella narwhal Cosby sweater McSweeney's, salvia kitsch before
-                they sold out High Life.
+                Welcome to the world of checkers/draft/draught or whatever you call it!
               </Typography>
               <div className={classes.person}>
                 <Typography
                   className={classes.name}
                   variant="body1"
                 >
-                  Takamaru Ayako
+                  Acha Bill
                 </Typography>
                 <Typography
                   className={classes.bio}
                   variant="body2"
                 >
-                  Manager at inVision
+                  shadowcode
                 </Typography>
               </div>
             </div>
@@ -222,11 +233,6 @@ const SignIn = props => {
           xs={12}
         >
           <div className={classes.content}>
-            <div className={classes.contentHeader}>
-              <IconButton onClick={handleBack}>
-                <ArrowBackIcon />
-              </IconButton>
-            </div>
             <div className={classes.contentBody}>
               <form
                 className={classes.form}
@@ -242,55 +248,20 @@ const SignIn = props => {
                   color="textSecondary"
                   gutterBottom
                 >
-                  Sign in with social media
-                </Typography>
-                <Grid
-                  className={classes.socialButtons}
-                  container
-                  spacing={2}
-                >
-                  <Grid item>
-                    <Button
-                      color="primary"
-                      onClick={handleSignIn}
-                      size="large"
-                      variant="contained"
-                    >
-                      <FacebookIcon className={classes.socialIcon} />
-                      Login with Facebook
-                    </Button>
-                  </Grid>
-                  <Grid item>
-                    <Button
-                      onClick={handleSignIn}
-                      size="large"
-                      variant="contained"
-                    >
-                      <GoogleIcon className={classes.socialIcon} />
-                      Login with Google
-                    </Button>
-                  </Grid>
-                </Grid>
-                <Typography
-                  align="center"
-                  className={classes.sugestion}
-                  color="textSecondary"
-                  variant="body1"
-                >
-                  or login with email address
+                  Sigin with username and password
                 </Typography>
                 <TextField
                   className={classes.textField}
-                  error={hasError('email')}
+                  error={hasError('username')}
                   fullWidth
                   helperText={
-                    hasError('email') ? formState.errors.email[0] : null
+                    hasError('username') ? formState.errors.username[0] : null
                   }
-                  label="Email address"
-                  name="email"
+                  label="Username"
+                  name="username"
                   onChange={handleChange}
                   type="text"
-                  value={formState.values.email || ''}
+                  value={formState.values.username || ''}
                   variant="outlined"
                 />
                 <TextField
@@ -341,7 +312,20 @@ const SignIn = props => {
 };
 
 SignIn.propTypes = {
-  history: PropTypes.object
+  history: PropTypes.object,
+  setJwt: PropTypes.func
 };
 
-export default withRouter(SignIn);
+
+const mapStateToProps = () => {
+  return {}
+}
+
+const mapDispatchToProps = dispatch => bindActionCreators({
+  setJwt  
+},
+dispatch
+);
+
+// export default withRouter(SignIn);
+export default connect(mapStateToProps, mapDispatchToProps)(SignIn);

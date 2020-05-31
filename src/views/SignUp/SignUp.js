@@ -1,44 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { Link as RouterLink, withRouter } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import validate from 'validate.js';
 import { makeStyles } from '@material-ui/styles';
 import {
   Grid,
   Button,
-  IconButton,
   TextField,
   Link,
   FormHelperText,
   Checkbox,
   Typography
 } from '@material-ui/core';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import { connect } from 'react-redux';
+import {bindActionCreators} from 'redux';
+import { setUser } from '../../redux/actions/authActions';
+import  authApi from '../../apis/authApi';
+import Swal from 'sweetalert2';
 
 const schema = {
-  firstName: {
+  userName: {
     presence: { allowEmpty: false, message: 'is required' },
     length: {
       maximum: 32
     }
   },
-  lastName: {
-    presence: { allowEmpty: false, message: 'is required' },
+  fullName: {
+    presence: { allowEmpty: true, message: 'is required' },
     length: {
       maximum: 32
-    }
-  },
-  email: {
-    presence: { allowEmpty: false, message: 'is required' },
-    email: true,
-    length: {
-      maximum: 64
     }
   },
   password: {
     presence: { allowEmpty: false, message: 'is required' },
     length: {
-      maximum: 128
+      maximum: 128,
+      minimum: 8
     }
   },
   policy: {
@@ -61,12 +58,11 @@ const useStyles = makeStyles(theme => ({
     }
   },
   quote: {
-    backgroundColor: theme.palette.neutral,
+    backgroundColor: theme.palette.black,
     height: '100%',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundImage: 'url(/images/auth.jpg)',
     backgroundSize: 'cover',
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center'
@@ -180,14 +176,25 @@ const SignUp = props => {
       }
     }));
   };
-
-  const handleBack = () => {
-    history.goBack();
-  };
-
-  const handleSignUp = event => {
+  const handleSignUp = async event => {
     event.preventDefault();
-    history.push('/');
+    try {
+      event.preventDefault();
+      const user = await authApi.register(formState.values);
+      setUser(user);
+      Swal.fire({
+        text: 'Successfully registered. SignIn to continue',
+        icon: 'success',
+      }).then(() => {
+        history.push('/sign-in');
+      });
+    }catch(e){
+      console.log(e);
+      Swal.fire({
+        icon: 'error',
+        text: e.message || 'an error occured'
+      });
+    }
   };
 
   const hasError = field =>
@@ -210,21 +217,20 @@ const SignUp = props => {
                 className={classes.quoteText}
                 variant="h1"
               >
-                Hella narwhal Cosby sweater McSweeney's, salvia kitsch before
-                they sold out High Life.
+               Welcome to the world of checkers/draft/draught or whatever you call it!
               </Typography>
               <div className={classes.person}>
                 <Typography
                   className={classes.name}
                   variant="body1"
                 >
-                  Takamaru Ayako
+                 Acha Bill
                 </Typography>
                 <Typography
                   className={classes.bio}
                   variant="body2"
                 >
-                  Manager at inVision
+                  shadowcode
                 </Typography>
               </div>
             </div>
@@ -237,11 +243,6 @@ const SignUp = props => {
           xs={12}
         >
           <div className={classes.content}>
-            <div className={classes.contentHeader}>
-              <IconButton onClick={handleBack}>
-                <ArrowBackIcon />
-              </IconButton>
-            </div>
             <div className={classes.contentBody}>
               <form
                 className={classes.form}
@@ -261,44 +262,30 @@ const SignUp = props => {
                 </Typography>
                 <TextField
                   className={classes.textField}
-                  error={hasError('firstName')}
+                  error={hasError('userName')}
                   fullWidth
                   helperText={
-                    hasError('firstName') ? formState.errors.firstName[0] : null
+                    hasError('userName') ? formState.errors.userName[0] : null
                   }
-                  label="First name"
-                  name="firstName"
+                  label="User name"
+                  name="userName"
                   onChange={handleChange}
                   type="text"
-                  value={formState.values.firstName || ''}
+                  value={formState.values.userName || ''}
                   variant="outlined"
                 />
                 <TextField
                   className={classes.textField}
-                  error={hasError('lastName')}
+                  error={hasError('fullName')}
                   fullWidth
                   helperText={
-                    hasError('lastName') ? formState.errors.lastName[0] : null
+                    hasError('fullName') ? formState.errors.fullName[0] : null
                   }
-                  label="Last name"
-                  name="lastName"
+                  label="Display Name"
+                  name="fullName"
                   onChange={handleChange}
                   type="text"
-                  value={formState.values.lastName || ''}
-                  variant="outlined"
-                />
-                <TextField
-                  className={classes.textField}
-                  error={hasError('email')}
-                  fullWidth
-                  helperText={
-                    hasError('email') ? formState.errors.email[0] : null
-                  }
-                  label="Email address"
-                  name="email"
-                  onChange={handleChange}
-                  type="text"
-                  value={formState.values.email || ''}
+                  value={formState.values.fullName || ''}
                   variant="outlined"
                 />
                 <TextField
@@ -382,4 +369,15 @@ SignUp.propTypes = {
   history: PropTypes.object
 };
 
-export default withRouter(SignUp);
+const mapStateToProps = () => {
+  return {}
+}
+
+const mapDispatchToProps = dispatch => bindActionCreators({
+  setUser
+},
+dispatch
+)
+
+// export default withRouter(SignIn);
+export default connect(mapStateToProps, mapDispatchToProps)(SignUp);

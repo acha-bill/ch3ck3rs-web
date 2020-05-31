@@ -16,6 +16,7 @@ import {
   SignIn as SignInView,
   NotFound as NotFoundView
 } from './views';
+import ProtectedRoute from 'components/ProtectedRoute';
 
 const Routes = () => {
   return (
@@ -23,7 +24,7 @@ const Routes = () => {
       <Redirect
         exact
         from="/"
-        to="/dashboard"
+        to="/sign-in"
       />
       <RouteWithLayout
         component={DashboardView}
@@ -31,7 +32,7 @@ const Routes = () => {
         layout={MainLayout}
         path="/dashboard"
       />
-      <RouteWithLayout
+      <ProtectedRoute
         component={UserListView}
         exact
         layout={MainLayout}
